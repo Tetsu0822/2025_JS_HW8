@@ -8,10 +8,12 @@ const cartApiUrl = `${baseUrl}${api_path}/carts`;
 const productWrap = document.querySelector(".productWrap");
 const productSelect = document.querySelector(".productSelect");
 const shoppingCartTable = document.querySelector(".shoppingCart-table tbody");
+const shoppingCartTotal = document.querySelector(".total");
+const discardAllBtn = document.querySelector(".discardAllBtn");
 // console.log(shoppingCartTable);
 let productData = [];
 let carts = [];
-
+let finalTotal = 0;
 // 取得產品列表
 function getProductList() {
   axios
@@ -49,7 +51,6 @@ function renderProducts(product) {
 productWrap.addEventListener("click", function(e) {
     e.preventDefault();
     const id = e.target.dataset.id;
-    console.log(id);
     let addCartClass = e.target.getAttribute("class");
     if (addCartClass !== "addCardBtn") {
         return;
@@ -69,6 +70,7 @@ function addCartItem(id) {
         .post(cartApiUrl, data)
         .then(function (response) {
             carts = response.data.carts;
+            finalTotal = response.data.finalTotal;
             renderCarts();
         })
         .catch(function (error) {
@@ -122,8 +124,9 @@ function getCarts() {
   axios
     .get(cartApiUrl)
     .then(function (response) {
-      carts = response.data.carts;
-      renderCarts();
+        carts = response.data.carts;
+        finalTotal = response.data.finalTotal;
+        renderCarts();
     })
     .catch(function (error) {
       console.log(error.response.data.message || "無法取得購物車列表");
@@ -136,6 +139,7 @@ function deleteCartItem(cartId) {
     .delete(`${baseUrl}${api_path}/carts/${cartId}`)
     .then(function (response) {
         carts = response.data.carts;
+        finalTotal = response.data.finalTotal;
         renderCarts();
     })
     .catch(function (error) {
@@ -153,6 +157,22 @@ shoppingCartTable.addEventListener("click" , function(e) {
         deleteCartItem(cartId);
     }
 });
+
+// 刪除所有品項
+discardAllBtn.addEventListener("click", delAllCartItem);
+function delAllCartItem(e) {
+    e.preventDefault();
+    axios
+        .delete(cartApiUrl)
+        .then((response) => {
+            carts = response.data.carts;
+            finalTotal = response.data.finalTotal;
+            renderCarts();
+        })
+        .catch( (error) => {
+            console.log(error.response.data.message || "無法刪除購物車產品");
+        });
+}
 
 // 渲染購物車列表
 function renderCarts() {
@@ -174,7 +194,9 @@ function renderCarts() {
         </tr>`;
     });
     shoppingCartTable.innerHTML = cartList;
+    shoppingCartTotal.textContent = `NT$ ${finalTotal}`;
 }
+
 
 function init() {
   getProductList();
