@@ -4,13 +4,16 @@ const api_path = "ttgchang";
 const token = "0T7kWNAmaTZXRmTjmnIAYLCAMcv2";
 const productsApiUrl = `${baseUrl}${api_path}/products`;
 const cartApiUrl = `${baseUrl}${api_path}/carts`;
+const orderApiUrl = `${baseUrl}${api_path}/orders`;
 // 宣告
 const productWrap = document.querySelector(".productWrap");
 const productSelect = document.querySelector(".productSelect");
 const shoppingCartTable = document.querySelector(".shoppingCart-table tbody");
 const shoppingCartTotal = document.querySelector(".total");
 const discardAllBtn = document.querySelector(".discardAllBtn");
-// console.log(shoppingCartTable);
+const orderInfoBtn = document.querySelector(".orderInfo-btn");
+const orderInfoForm = document.querySelector(".orderInfo-form");
+// console.log(orderInfoForm);
 let productData = [];
 let carts = [];
 let finalTotal = 0;
@@ -45,37 +48,6 @@ function renderProducts(product) {
         </li>`;
   });
   productWrap.innerHTML = str;
-}
-
-// 加入購物車
-productWrap.addEventListener("click", function(e) {
-    e.preventDefault();
-    const id = e.target.dataset.id;
-    let addCartClass = e.target.getAttribute("class");
-    if (addCartClass !== "addCardBtn") {
-        return;
-    } else {
-        addCartItem(id);
-    }
-});
-
-function addCartItem(id) {
-    const data = {
-        data: {
-            productId: id,
-            quantity: 1
-        }
-    };
-    axios
-        .post(cartApiUrl, data)
-        .then(function (response) {
-            carts = response.data.carts;
-            finalTotal = response.data.finalTotal;
-            renderCarts();
-        })
-        .catch(function (error) {
-            console.log(error.response.data.message || "無法加入購物車");
-        });
 }
 
 // 篩選分類選單
@@ -133,16 +105,54 @@ function getCarts() {
     });
 }
 
+// 加入購物車
+productWrap.addEventListener("click", function(e) {
+    e.preventDefault();
+    const id = e.target.dataset.id;
+    let addCartClass = e.target.getAttribute("class");
+    if (addCartClass !== "addCardBtn") {
+        return;
+    } else {
+        addCartItem(id);
+    }
+});
+
+function addCartItem(id) {
+    // 檢查商品數量
+    let numCheck = 1;
+    carts.forEach((item) => {
+      if (item.product.id === id) {
+        numCheck = item.quantity+=1;
+      }
+    });
+    const data = {
+        data: {
+            productId: id,
+            quantity: numCheck
+        }
+    };
+    axios
+        .post(cartApiUrl, data)
+        .then(function (response) {
+            carts = response.data.carts;
+            finalTotal = response.data.finalTotal;
+            renderCarts();
+        })
+        .catch(function (error) {
+            console.log(error.response.data.message || "無法加入購物車");
+        });
+}
+
 // 刪除購物車內特定產品
 function deleteCartItem(cartId) {
   axios
     .delete(`${baseUrl}${api_path}/carts/${cartId}`)
-    .then(function (response) {
+    .then((response) => {
         carts = response.data.carts;
         finalTotal = response.data.finalTotal;
         renderCarts();
     })
-    .catch(function (error) {
+    .catch((error) => {
       console.log(error.response.data.message || "無法刪除購物車產品");
     });
 }
@@ -169,7 +179,7 @@ function delAllCartItem(e) {
             finalTotal = response.data.finalTotal;
             renderCarts();
         })
-        .catch( (error) => {
+        .catch((error) => {
             console.log(error.response.data.message || "無法刪除購物車產品");
         });
 }
@@ -196,6 +206,52 @@ function renderCarts() {
     shoppingCartTable.innerHTML = cartList;
     shoppingCartTotal.textContent = `NT$ ${finalTotal}`;
 }
+
+// 送出訂單
+orderInfoBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  if (carts.length == 0) {
+    alert("請加入購物車");
+    return;
+  }
+  const customerName = document.querySelector("#customerName");
+  const customerPhone = document.querySelector("#customerPhone");
+  const customerEmail = document.querySelector("#customerEmail");
+  const customerAddress = document.querySelector("#customerAddress");
+  const tradeWay = document.querySelector("#tradeWay");
+
+  let name = customerName.value.trim();
+  let tel = customerPhone.value.trim();
+  let email = customerEmail.value.trim();
+  let address = customerAddress.value.trim();
+  let payment = tradeWay.value.trim();
+
+  if (name=="" || tel=="" || email=="" || address=="" || payment=="") {
+    alert("請輸入訂單資訊");
+    return;
+  }
+  const data = {
+      data: {
+        user: {
+          name,
+          tel,
+          email,
+          address,
+          payment
+        }
+    }
+  };
+  axios.post(orderApiUrl, data)
+    .then(response => {
+      alert("訂單建立成功");
+      orderInfoForm.reset();
+      getCarts();
+    })
+    .catch(error => {
+      alert("訂單建立失敗");
+    });
+})
+
 
 
 function init() {
