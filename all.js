@@ -1,7 +1,7 @@
 // 請代入自己的網址路徑
 const baseUrl = "https://livejs-api.hexschool.io/api/livejs/v1/customer/";
 const api_path = "ttgchang";
-const token = "0T7kWNAmaTZXRmTjmnIAYLCAMcv2";
+const uid = "0T7kWNAmaTZXRmTjmnIAYLCAMcv2";
 const productsApiUrl = `${baseUrl}${api_path}/products`;
 const cartApiUrl = `${baseUrl}${api_path}/carts`;
 const orderApiUrl = `${baseUrl}${api_path}/orders`;
