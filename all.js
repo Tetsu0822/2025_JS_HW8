@@ -185,9 +185,9 @@ function renderCarts() {
                 <p>${item.product.title}</p>
             </div>
             </td>
-            <td>NT$${item.product.origin_price}</td>
-            <td>${item.quantity}</td>
             <td>NT$${item.product.price}</td>
+            <td>${item.quantity}</td>
+            <td>NT$${item.product.price * item.quantity}</td>
             <td class="discardBtn">
             <a href="#" class="material-icons" data-id="${item.id}"> clear </a>
             </td>
