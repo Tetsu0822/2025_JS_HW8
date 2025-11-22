@@ -13,7 +13,13 @@ const shoppingCartTotal = document.querySelector(".total");
 const discardAllBtn = document.querySelector(".discardAllBtn");
 const orderInfoBtn = document.querySelector(".orderInfo-btn");
 const orderInfoForm = document.querySelector(".orderInfo-form");
-// console.log(orderInfoForm);
+const customerName = document.querySelector("#customerName");
+const customerPhone = document.querySelector("#customerPhone");
+const customerEmail = document.querySelector("#customerEmail");
+const customerAddress = document.querySelector("#customerAddress");
+const tradeWay = document.querySelector("#tradeWay");
+
+// console.log(customerName);
 let productData = [];
 let carts = [];
 let finalTotal = 0;
@@ -214,34 +220,52 @@ orderInfoBtn.addEventListener("click", (e) => {
     alert("請加入購物車");
     return;
   }
-  const customerName = document.querySelector("#customerName");
-  const customerPhone = document.querySelector("#customerPhone");
-  const customerEmail = document.querySelector("#customerEmail");
-  const customerAddress = document.querySelector("#customerAddress");
-  const tradeWay = document.querySelector("#tradeWay");
+  customerName.nextElementSibling.style.display = "none";
+  customerPhone.nextElementSibling.style.display = "none";
+  customerEmail.nextElementSibling.style.display = "none";
+  customerAddress.nextElementSibling.style.display = "none";
 
-  let name = customerName.value.trim();
-  let tel = customerPhone.value.trim();
-  let email = customerEmail.value.trim();
-  let address = customerAddress.value.trim();
-  let payment = tradeWay.value.trim();
+  const name = customerName.value.trim();
+  const tel = customerPhone.value.trim();
+  const email = customerEmail.value.trim();
+  const address = customerAddress.value.trim();
+  const payment = tradeWay.value.trim();
 
-  if (name=="" || tel=="" || email=="" || address=="" || payment=="") {
-    alert("請輸入訂單資訊");
-    return;
+  let isError = false;
+  if (!name) {
+    customerName.nextElementSibling.style.display = "block";
+    isError = true;
   }
-  const data = {
-      data: {
-        user: {
-          name,
-          tel,
-          email,
-          address,
-          payment
-        }
-    }
-  };
-  axios.post(orderApiUrl, data)
+  if (!tel) {
+    customerPhone.nextElementSibling.style.display = "block";
+    isError = true;
+  }
+  if (!email) {
+    customerEmail.nextElementSibling.style.display = "block";
+    isError = true;
+  }
+  if (!address) {
+    customerAddress.nextElementSibling.style.display = "block";
+    isError = true;
+  }
+  if (!isError) {
+    const formData = {
+        data: {
+          user: {
+            name,
+            tel,
+            email,
+            address,
+            payment,
+          },
+      },
+    };
+    submitOrder(formData);
+  }
+})
+
+function submitOrder(formData) {
+  axios.post(orderApiUrl, formData)
     .then(response => {
       alert("訂單建立成功");
       orderInfoForm.reset();
@@ -250,7 +274,7 @@ orderInfoBtn.addEventListener("click", (e) => {
     .catch(error => {
       alert("訂單建立失敗");
     });
-})
+}
 
 
 
