@@ -125,7 +125,8 @@ function getOrders() {
         orders = response.data.orders;
         console.log(orders);
         renderOrders();
-        renderC3();
+        // renderC3();
+        renderC3_lv2();
     })
     .catch(error => {
         console.log(error.response.data.message);
@@ -171,6 +172,60 @@ function renderC3() {
                 "其他": "#301E5F",
             }
         },
+    });
+}
+
+function renderC3_lv2() {
+    // 資料蒐集
+    let obj = {};
+    orders.forEach(item => {
+        item.products.forEach(product => {
+            if (obj[product.title] == undefined) {
+                obj[product.title] = product.price * product.quantity;
+            } else {
+                obj[product.title] += product.price * product.quantity;
+            }
+        });
+    });
+    // 資料轉換
+    let titleAry = Object.keys(obj);
+    // 透過 originAry，整理成 C3 格式
+    let rankSortAry = [];
+    titleAry.forEach(item => {
+        let ary = [];
+        ary.push(item);
+        ary.push(obj[item]);
+        rankSortAry.push(ary);
+    });
+    // 由大到小排序
+    rankSortAry.sort((a, b) => {
+        return b[1] - a[1];
+    });
+    // 如果筆數超過 4 筆，則把第四筆之後的資料歸類為「其他」
+    if (rankSortAry.length > 3) {
+        let otherTotal = 0;
+        rankSortAry.forEach((item, index) => {
+            if (index > 2) {
+                otherTotal += rankSortAry[index][1];
+            }
+        });
+    // 截取前三筆資料（注意：Array.prototype.slice 不會修改原陣列，需把結果指回變數）
+    rankSortAry = rankSortAry.slice(0, 3);
+    // 加入「其他」資料
+    rankSortAry.push(["其他", otherTotal]);
+    }
+    console.log(rankSortAry);
+    // C3.js
+    c3.generate({
+        bindto: '#chart_lv2', // HTML 元素綁定
+        data: {
+            type: "pie",
+            columns: rankSortAry,
+        },
+        color:{
+            pattern: ['#DACBFF', '#9D7FEA', '#5434A7', '#301E5F']
+        }
+
     });
 }
 
