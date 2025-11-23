@@ -1,7 +1,5 @@
 // 請代入自己的網址路徑
 const baseUrl = "https://livejs-api.hexschool.io/api/livejs/v1/admin/";
-const api_path = "ttgchang";
-const uid = "0T7kWNAmaTZXRmTjmnIAYLCAMcv2";
 const orderApiUrl = `${baseUrl}${api_path}/orders`;
 
 let orders = [];
@@ -58,13 +56,13 @@ function renderOrders() {
 orderPageTableBody.addEventListener("click", (e) => {
     e.preventDefault();
     const targetClass = e.target.getAttribute("class");
-    console.log(targetClass);
     let id = e.target.getAttribute("data-id");
+    // 刪除特定訂單
     if (targetClass == "delSingleOrder-Btn js-orderDelete") {
         deleteOrderItem(id);
         return;
     }
-
+    // 變更訂單狀態
     if (targetClass == "js-orderStatus") {
         let status = e.target.getAttribute("data-status");
         changeOrderStatus(status, id);
@@ -75,7 +73,6 @@ orderPageTableBody.addEventListener("click", (e) => {
 // 變更訂單狀態
 function changeOrderStatus(status, id) {
     let newStatus = (status === true) ? false : true;
-    console.log(status, id);
     axios.put(orderApiUrl, {
         data: {
             id,
@@ -83,11 +80,11 @@ function changeOrderStatus(status, id) {
         }
     }, config)
     .then(response => {
-        console.log(response);
+        Notify.toast("success", "訂單狀態已更新");
         getOrders();
     })
     .catch(error => {
-        console.log(error.response.data.message);
+        Notify.toast("error", error.response.data.message || "無法更新訂單狀態");
     });
 }
 
@@ -95,11 +92,11 @@ function changeOrderStatus(status, id) {
 function deleteOrderItem(id) {
     axios.delete(`${orderApiUrl}/${id}`, config)
     .then(response => {
-        console.log(response);
+        Notify.toast("success", "已刪除該筆訂單");
         getOrders();
     })
     .catch(error => {
-        console.log(error.response.data.message);
+        Notify.toast("error", error.response.data.message || `無法刪除${id}訂單`);
     });
 }
 
@@ -109,12 +106,11 @@ function deleteAllOrders(e) {
     e.preventDefault();
     axios.delete(orderApiUrl, config)
     .then(response => {
-        alert("已刪除所有訂單");
-        console.log(response);
+        Notify.toast('success', '已刪除所有訂單');
         getOrders();
     })
     .catch(error => {
-        console.log(error.response.data.message);
+        Notify.toast("error", error.response.data.message || "無法刪除所有訂單");
     });
 }
 
@@ -123,13 +119,12 @@ function getOrders() {
     axios.get(orderApiUrl, config)
     .then(response => {
         orders = response.data.orders;
-        console.log(orders);
         renderOrders();
-        // renderC3();
+        renderC3();
         renderC3_lv2();
     })
     .catch(error => {
-        console.log(error.response.data.message);
+        Notify.toast("error", error.response.data.message || "無法取得訂單資料");
     })
 }
 
@@ -147,7 +142,6 @@ function renderC3() {
             }
         });
     });
-    console.log(total);
     // 做出品項關聯
     let categoryAry = Object.keys(total);
     console.log(categoryAry);

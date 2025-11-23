@@ -1,7 +1,6 @@
+
 // 請代入自己的網址路徑
 const baseUrl = "https://livejs-api.hexschool.io/api/livejs/v1/customer/";
-const api_path = "ttgchang";
-const uid = "0T7kWNAmaTZXRmTjmnIAYLCAMcv2";
 const productsApiUrl = `${baseUrl}${api_path}/products`;
 const cartApiUrl = `${baseUrl}${api_path}/carts`;
 const orderApiUrl = `${baseUrl}${api_path}/orders`;
@@ -107,7 +106,7 @@ function getCarts() {
         renderCarts();
     })
     .catch(function (error) {
-      console.log(error.response.data.message || "無法取得購物車列表");
+      Notify.toast("error", error.response.data.message || "無法取得購物車列表");
     });
 }
 
@@ -140,12 +139,13 @@ function addCartItem(id) {
     axios
         .post(cartApiUrl, data)
         .then(function (response) {
+          Notify.toast("success", "已加入購物車");
             carts = response.data.carts;
             finalTotal = response.data.finalTotal;
             renderCarts();
         })
         .catch(function (error) {
-            console.log(error.response.data.message || "無法加入購物車");
+          Notify.toast("error", error.response.data.message || "無法加入購物車");
         });
 }
 
@@ -156,10 +156,11 @@ function deleteCartItem(cartId) {
     .then((response) => {
         carts = response.data.carts;
         finalTotal = response.data.finalTotal;
+        Notify.toast("success", "已刪除購物車產品");
         renderCarts();
     })
     .catch((error) => {
-      console.log(error.response.data.message || "無法刪除購物車產品");
+      Notify.toast("error", error.response.data.message || "無法刪除購物車產品");
     });
 }
 
@@ -183,10 +184,11 @@ function delAllCartItem(e) {
         .then((response) => {
             carts = response.data.carts;
             finalTotal = response.data.finalTotal;
+            Notify.toast("success", "已刪除所有購物車產品");
             renderCarts();
         })
         .catch((error) => {
-            console.log(error.response.data.message || "無法刪除購物車產品");
+            Notify.toast("error", error.response.data.message || "無法刪除購物車產品");
         });
 }
 
@@ -217,7 +219,7 @@ function renderCarts() {
 orderInfoBtn.addEventListener("click", (e) => {
   e.preventDefault();
   if (carts.length == 0) {
-    alert("請加入購物車");
+    Notify.toast('warning', '請加入購物車');
     return;
   }
   customerName.nextElementSibling.style.display = "none";
@@ -267,12 +269,12 @@ orderInfoBtn.addEventListener("click", (e) => {
 function submitOrder(formData) {
   axios.post(orderApiUrl, formData)
     .then(response => {
-      alert("訂單建立成功");
+      Notify.toast("success", "訂單建立成功，將儘快為您處理");
       orderInfoForm.reset();
       getCarts();
     })
     .catch(error => {
-      alert("訂單建立失敗");
+      Notify.toast("error", "訂單建立失敗");
     });
 }
 
