@@ -12,19 +12,25 @@ const config = {
 };
 
 const orderPageTableBody = document.querySelector(".orderPage-table tbody");
+const discardAllOrdersBtn = document.querySelector(".discardAllBtn");
+// console.log(discardAllOrdersBtn);
 
 function renderOrders() {
     let orderList = "";
     orders.forEach(item => {
+        // 處理訂單日期格式
         const orderDate = new Date(item.createdAt * 1000)
             .toISOString()
             .slice(0, 10)
             .replaceAll("-", "/");
+        // 訂單商品品項
         const products = item.products;
         let productList = "";
         products.forEach(product => {
-            productList += `<p>${product.title}</p>`;
+            productList += `<p>${product.title}x${product.quantity}</p>`;
         });
+        // 訂單狀態
+        let orderStatus = (item.paid==true) ? "已處理" : "未處理";
         orderList += `<tr>
             <td>${item.id}</td>
             <td>
@@ -38,14 +44,78 @@ function renderOrders() {
             </td>
             <td>${orderDate}</td>
             <td class="orderStatus">
-                <a href="#">未處理</a>
+                <a href="#" class="js-orderStatus" data-status="${item.paid}" data-id="${item.id}">${orderStatus}</a>
             </td>
             <td>
-                <input type="button" class="delSingleOrder-Btn" value="刪除">
+                <input type="button" class="delSingleOrder-Btn js-orderDelete" data-id="${item.id}" value="刪除">
             </td>
         </tr>`;
     });
     orderPageTableBody.innerHTML = orderList;
+    renderC3();
+}
+
+orderPageTableBody.addEventListener("click", (e) => {
+    e.preventDefault();
+    const targetClass = e.target.getAttribute("class");
+    console.log(targetClass);
+    let id = e.target.getAttribute("data-id");
+    if (targetClass == "delSingleOrder-Btn js-orderDelete") {
+        deleteOrderItem(id);
+        return;
+    }
+
+    if (targetClass == "js-orderStatus") {
+        let status = e.target.getAttribute("data-status");
+        changeOrderStatus(status, id);
+        return;
+    }
+})
+
+// 變更訂單狀態
+function changeOrderStatus(status, id) {
+    let newStatus = (status === true) ? false : true;
+    console.log(status, id);
+    axios.put(orderApiUrl, {
+        data: {
+            id,
+            paid: newStatus,
+        }
+    }, config)
+    .then(response => {
+        console.log(response);
+        getOrders();
+    })
+    .catch(error => {
+        console.log(error.response.data.message);
+    });
+}
+
+// 刪除特定訂單
+function deleteOrderItem(id) {
+    axios.delete(`${orderApiUrl}/${id}`, config)
+    .then(response => {
+        console.log(response);
+        getOrders();
+    })
+    .catch(error => {
+        console.log(error.response.data.message);
+    });
+}
+
+// 刪除所有訂單
+discardAllOrdersBtn.addEventListener("click", deleteAllOrders);
+function deleteAllOrders(e) {
+    e.preventDefault();
+    axios.delete(orderApiUrl, config)
+    .then(response => {
+        alert("已刪除所有訂單");
+        console.log(response);
+        getOrders();
+    })
+    .catch(error => {
+        console.log(error.response.data.message);
+    });
 }
 
 // 取得訂單資料
@@ -55,30 +125,58 @@ function getOrders() {
         orders = response.data.orders;
         console.log(orders);
         renderOrders();
+        renderC3();
     })
     .catch(error => {
         console.log(error.response.data.message);
     })
 }
 
-getOrders();
+// 渲染圖表
+function renderC3() {
+    console.log(orders);
+    // 物件資料收集
+    let total = {};
+    orders.forEach(item => {
+        item.products.forEach(product => {
+            if (total[product.category] == undefined) {
+                total[product.category] = product.price * product.quantity;
+            }else {
+                total[product.category] += product.price * product.quantity;
+            }
+        });
+    });
+    console.log(total);
+    // 做出品項關聯
+    let categoryAry = Object.keys(total);
+    console.log(categoryAry);
+    let newData = [];
+    categoryAry.forEach(item => {
+        let ary = [];
+        ary.push(item);
+        ary.push(total[item]);
+        newData.push(ary);
+    });
+    console.log(newData);
+    // C3.js
+    let chart = c3.generate({
+        bindto: '#chart', // HTML 元素綁定
+        data: {
+            type: "pie",
+            columns: newData,
+            colors:{
+                "床架":"#DACBFF",
+                "收納":"#9D7FEA",
+                "窗簾": "#5434A7",
+                "其他": "#301E5F",
+            }
+        },
+    });
+}
 
-// C3.js
-let chart = c3.generate({
-    bindto: '#chart', // HTML 元素綁定
-    data: {
-        type: "pie",
-        columns: [
-        ['Louvre 雙人床架', 1],
-        ['Antony 雙人床架', 2],
-        ['Anty 雙人床架', 3],
-        ['其他', 4],
-        ],
-        colors:{
-            "Louvre 雙人床架":"#DACBFF",
-            "Antony 雙人床架":"#9D7FEA",
-            "Anty 雙人床架": "#5434A7",
-            "其他": "#301E5F",
-        }
-    },
-});
+// 初始化
+function init() {
+    getOrders();
+}
+
+init();

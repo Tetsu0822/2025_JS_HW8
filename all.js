@@ -49,8 +49,8 @@ function renderProducts(product) {
             />
             <a href="#" class="addCardBtn" data-id="${item.id}">加入購物車</a>
             <h3>${item.title}</h3>
-            <del class="originPrice">NT$${item.origin_price}</del>
-            <p class="nowPrice">NT$${item.price}</p>
+            <del class="originPrice">NT$${toThousands(item.origin_price)}</del>
+            <p class="nowPrice">NT$${toThousands(item.price)}</p>
         </li>`;
   });
   productWrap.innerHTML = str;
@@ -103,7 +103,7 @@ function getCarts() {
     .get(cartApiUrl)
     .then(function (response) {
         carts = response.data.carts;
-        finalTotal = response.data.finalTotal;
+        finalTotal = toThousands(response.data.finalTotal);
         renderCarts();
     })
     .catch(function (error) {
@@ -201,9 +201,9 @@ function renderCarts() {
                 <p>${item.product.title}</p>
             </div>
             </td>
-            <td>NT$${item.product.price}</td>
+            <td>NT$${toThousands(item.product.price)}</td>
             <td>${item.quantity}</td>
-            <td>NT$${item.product.price * item.quantity}</td>
+            <td>NT$${toThousands(item.product.price * item.quantity)}</td>
             <td class="discardBtn">
             <a href="#" class="material-icons" data-id="${item.id}"> clear </a>
             </td>
@@ -278,6 +278,7 @@ function submitOrder(formData) {
 
 
 
+
 function init() {
   getProductList();
   getCarts();
@@ -285,3 +286,10 @@ function init() {
 
 // 預設載入
 init();
+
+// util functions
+function toThousands(x) {
+    let parts = x.toString().split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return parts.join(".");
+}
