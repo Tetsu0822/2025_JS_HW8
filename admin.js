@@ -130,7 +130,6 @@ function getOrders() {
 
 // 渲染圖表
 function renderC3() {
-    console.log(orders);
     // 物件資料收集
     let total = {};
     orders.forEach(item => {
@@ -144,28 +143,49 @@ function renderC3() {
     });
     // 做出品項關聯
     let categoryAry = Object.keys(total);
-    console.log(categoryAry);
-    let newData = [];
+    // 透過 originAry，整理成 C3 格式
+    let rankSortAry = [];
     categoryAry.forEach(item => {
         let ary = [];
         ary.push(item);
         ary.push(total[item]);
-        newData.push(ary);
+        rankSortAry.push(ary);
     });
-    console.log(newData);
+    // 由大到小排序
+    rankSortAry.sort((a, b) => {
+        return b[1] - a[1];
+    });
+    // 如果筆數超過 4 筆，則把第四筆之後的資料歸類為「其他」
+    if (rankSortAry.length > 3) {
+        let otherTotal = 0;
+        rankSortAry.forEach((item, index) => {
+            if (index > 2) {
+                otherTotal += rankSortAry[index][1];
+            }
+        });
+    // 截取前三筆資料（注意：Array.prototype.slice 不會修改原陣列，需把結果指回變數）
+    rankSortAry = rankSortAry.slice(0, 3);
+    // 加入「其他」資料
+    rankSortAry.push(["其他", otherTotal]);
+    }
+
+    // let newData = [];
+    // categoryAry.forEach(item => {
+    //     let ary = [];
+    //     ary.push(item);
+    //     ary.push(total[item]);
+    //     newData.push(ary);
+    // });
     // C3.js
-    let chart = c3.generate({
+    c3.generate({
         bindto: '#chart', // HTML 元素綁定
         data: {
             type: "pie",
-            columns: newData,
-            colors:{
-                "床架":"#DACBFF",
-                "收納":"#9D7FEA",
-                "窗簾": "#5434A7",
-                "其他": "#301E5F",
-            }
+            columns: rankSortAry,
         },
+        color:{
+            pattern: ['#DACBFF', '#9D7FEA', '#5434A7', '#301E5F']
+        }
     });
 }
 
@@ -208,7 +228,7 @@ function renderC3_lv2() {
     // 加入「其他」資料
     rankSortAry.push(["其他", otherTotal]);
     }
-    console.log(rankSortAry);
+
     // C3.js
     c3.generate({
         bindto: '#chart_lv2', // HTML 元素綁定
@@ -218,8 +238,7 @@ function renderC3_lv2() {
         },
         color:{
             pattern: ['#DACBFF', '#9D7FEA', '#5434A7', '#301E5F']
-        }
-
+        },
     });
 }
 
